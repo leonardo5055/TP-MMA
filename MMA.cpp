@@ -1,188 +1,221 @@
 #include <iostream>
 #include<cstring>
+#include <cstdlib> // para el clear screen
+#include <conio.h> // para el get key
+
 using namespace std;
 
 struct Luchador{
 
-	int id;
-	char nombre[50];
-	char apodo[50];
-	float peso;
-	int victorias;
-	int derrotas;
-	
-	
+    int id;
+    char nombre[50];
+    char apodo[50];
+    float peso;
+    int victorias;
+    int derrotas;
 };
-struct Nodo{
+struct nodo{
     Luchador info;
-    Nodo* sgte;
+    nodo* sgte;
 };
 
-void crearArchivo() {
- FILE *archive = fopen("Luchadores.dat", "wb");
- Luchador l;
- l.id = 1;
- strcpy(l.nombre, "Martin");
- strcpy(l.apodo, "Tincho");
- l.peso = 80.500;
- l.victorias=3;
- l.derrotas=2;
- fwrite(&l, sizeof(Luchador), 1, archive);
- l.id = 2;
-strcpy(l.nombre, "Carlos");
-strcpy(l.apodo, "El Toro");
-l.peso = 92.300;
-l.victorias = 7;
-l.derrotas = 1;
-fwrite(&l, sizeof(Luchador), 1, archive);
-
-l.id = 3;
-strcpy(l.nombre, "Javier");
-strcpy(l.apodo, "El Rayo");
-l.peso = 75.800;
-l.victorias = 5;
-l.derrotas = 4;
-fwrite(&l, sizeof(Luchador), 1, archive);
-
-l.id = 4;
-strcpy(l.nombre, "Diego");
-strcpy(l.apodo, "La Mole");
-l.peso = 105.600;
-l.victorias = 10;
-l.derrotas = 2;
-fwrite(&l, sizeof(Luchador), 1, archive);
-
-l.id = 5;
-strcpy(l.nombre, "Lucas");
-strcpy(l.apodo, "Pantera");
-l.peso = 68.250;
-l.victorias = 8;
-l.derrotas = 3;
-fwrite(&l, sizeof(Luchador), 1, archive);
-
-l.id = 6;
-strcpy(l.nombre, "Fernando");
-strcpy(l.apodo, "El Titan");
-l.peso = 88.900;
-l.victorias = 6;
-l.derrotas = 5;
-fwrite(&l, sizeof(Luchador), 1, archive);
-
-l.id = 7;
-strcpy(l.nombre, "Matias");
-strcpy(l.apodo, "Huracan");
-l.peso = 79.400;
-l.victorias = 4;
-l.derrotas = 6;
-fwrite(&l, sizeof(Luchador), 1, archive);
- fclose(archive);
+Luchador pop(nodo* & pila){
+    Luchador aux;
+    aux= pila->info;
+    nodo* p=pila;
+    pila=p->sgte;
+    delete p;
+    return aux;
 }
 
+void push(nodo*&pila,Luchador info){
+    nodo* p=new nodo();
+    p->info=info;
+    p->sgte=pila;
+    pila=p;
 
+}
 
-Nodo* insertarOrdenado(Nodo*& lista,Luchador l)
+nodo* buscar(nodo* lista, Luchador x)
 {
-	Nodo* p=new Nodo();
-	p->info = l;
-	p->sgte = NULL;
-	
-	if(lista==NULL || (l.victorias-l.derrotas) > (lista->info.victorias-lista->info.derrotas))
+	nodo* aux=lista;
+	while(aux!=NULL && aux->info.id!=x.id)
 	{
-		p->sgte=lista;
-		lista=p;
+		aux=aux->sgte;
 	}
-	else
-	{ 
-		Nodo* q=lista;
-		while(q->sgte!=NULL &&(q->sgte->info.victorias-q->sgte->info.derrotas) > (l.victorias-l.derrotas))	
-	   {
-	   		q=q->sgte;
-	   }	
-	   p->sgte =q->sgte;
-	   q->sgte = p;
-	}
-	return p;   
+	return aux;
 }
-void mostrar(Nodo*& Lista)
+
+nodo* insertarOrdenado(nodo*& lista, Luchador x)
 {
-    // Conservando la lista (no se libera memoria)
+    nodo* p = new nodo();
+    p->info = x;
+    p->sgte = NULL;
 
-    Nodo* p = Lista;
+    int dif = x.victorias - x.derrotas;
 
-    while (p != NULL)
+    if(lista == NULL || 
+       dif > (lista->info.victorias - lista->info.derrotas))
     {
-        cout << "ID: " << p->info.id << endl;
-        cout << "Nombre: " << p->info.nombre << endl;
-        cout << "Apodo: " << p->info.apodo << endl;
-        cout << "Peso: " << p->info.peso << endl;
-        cout << "Victorias: " << p->info.victorias << endl;
-        cout << "Derrotas: " << p->info.derrotas << endl;
-        cout << "---------------------------" << endl;
-		
-        p = p->sgte;
+        p->sgte = lista;
+        lista = p;
     }
+    else
+    {
+        nodo* q = lista;
+        while(q->sgte != NULL &&
+              (q->sgte->info.victorias - q->sgte->info.derrotas) > dif)
+        {
+            q = q->sgte;
+        }
+        p->sgte = q->sgte;
+        q->sgte = p;
+    }
+
+    return p;
+}
+
+nodo* insertarSinRepetir(nodo*& Lista, Luchador info)
+{
+	nodo* q;
+	q = buscar(Lista,info);
+	if(q==NULL)
+	{
+		q=insertarOrdenado(Lista,info);
+	}
+	return q;
+}
+
+void guardarDatos(nodo* &lista) 
+{
+	FILE* archivo = fopen("Luchadores.dat","ab");
+	nodo* aux = lista;
+	while(aux!=NULL)
+	{
+		fwrite(&aux->info, sizeof(Luchador), 1, archivo);
+		aux = aux->sgte;
+	}
+	
+	fclose(archivo);
+}
+
+void cargarGimnasio(nodo* &lista) 
+{
+    FILE *archivo = fopen("Luchadores.dat", "rb");
+    Luchador l;
+
+    while (fread(&l, sizeof(Luchador), 1, archivo))
+    {
+        insertarOrdenado(lista, l);
+    }
+
+    fclose(archivo);
+}
+
+int generarMainCard(nodo* lista, Luchador top_5[])
+{
+    nodo* aux = lista;
+    int i = 0;
+
+    while(aux != NULL && i < 5)
+    {
+        top_5[i] = aux->info;
+        aux = aux->sgte;
+        i++;
+    }
+    return i;
 }
 
 int main(){
-	
-	Luchador Top_10[10];
-	Nodo* lista=NULL;
-	Nodo* aux;
-	Luchador m;
+	Luchador luchador;
+    Luchador top_10[10];
+    Luchador top_5[5];
+    
+    nodo* lista = NULL;
+
 	int opcion;
-	crearArchivo();
-	int i=0;
-	do
+    
+    do
+    {
+    system("cls");
+    cout << "1)Inscripcion de Atleta" << endl;
+    cout << "2)Generar Main Card" << endl;
+    cout << "3)Actualizar Récord" << endl;
+    cout << "4)Guardar Gimnasio" << endl;
+    cout << "5)Cargar Gimnasio" << endl;
+    cout << "6)Salir" << endl;
+    
+    cout << endl << "> ";
+    cin>>opcion;
+    
+    if(opcion==1)
 	{
-	cout<<"1)Inscripción de Atleta"<<endl;
-		if(opcion==1){
-			Luchador l;
-
-			l.id=++i;
-			cout << "Ingrese nombre: "<<endl;
-			cin>> l.nombre;
-
-			cout << "Ingrese apodo: "<<endl;
-			cin>>l.apodo;
-
-			cout << "Ingrese peso: "<<endl;
-			cin >> l.peso;
-
-			cout << "Ingrese cantidad de victorias: "<<endl;
-			cin >> l.victorias;
-
-			cout << "Ingrese cantidad de derrotas: "<<endl;
-			cin >> l.derrotas;
-			aux=insertarOrdenado(lista,l);
-		}
-	cout<<"2)Generar Main Card"<<endl;
-	if(opcion==2){
-		mostrar(lista);
-	}
-	cout<<"3)Actualizar Récord"<<endl;	
-	cout<<"4)Guardar Gimnasio"<<endl;
-	cout<<"5)Cargar Gimnasio"<<endl;
-
-		if(opcion==5){
-		 FILE *archive = fopen("Luchadores.dat", "rb");
+		system("cls");
+		cout << "Ingrese ID: ";
+        cin >> luchador.id;
 		
-	while(fread(&m,sizeof(Luchador),1,archive))
+        cout << "Ingrese nombre: ";
+        cin >> luchador.nombre;
+
+        cout << "Ingrese apodo: ";
+        cin >> luchador.apodo;
+
+        cout << "Ingrese peso: ";
+        cin >> luchador.peso;
+        
+        cout << "Ingrese cantidad de victorias: ";
+        cin >> luchador.victorias;
+
+        cout << "Ingrese cantidad de derrotas: ";
+        cin >> luchador.derrotas;
+        
+        insertarSinRepetir(lista, luchador);
+	}
+	if(opcion == 2)
+    {
+    	int x;
+    	system("cls");
+    	int cant = generarMainCard(lista, top_5);
+    	if (cant == 0)
+		{
+			cout << "No hay luchadores disponibles para mostrar";
+		}
+		else
+		{
+			for(int i = 0; i < cant; i++)
+			{
+			cout << "LUCHADOR " << i+1 << endl;
+    		cout << "ID: " << top_5[i].id << endl;
+    		cout << "Nombre: " << top_5[i].nombre << endl;
+    		cout << "Apodo: " << top_5[i].apodo << endl;
+    		cout << "Peso: " << top_5[i].peso << endl;
+    		cout << "Victorias: " << top_5[i].victorias << endl;
+    		cout << "Derrotas: " << top_5[i].derrotas << endl << endl;	
+			}
+		}
+    	
+		_getch();
+	}
+    if(opcion == 3)
 	{
-		Top_10[i].id=m.id;
-		strcpy(Top_10[i].nombre,m.nombre);
-		strcpy(Top_10[i].apodo,m.apodo);
-		Top_10[i].peso=m.peso;
-		Top_10[i].victorias=m.victorias;
-		Top_10[i].derrotas=m.derrotas;
-		aux = insertarOrdenado(lista,m);		
-		i++;
+		system("cls");
+    	Luchador laux;
+    	cout << "Ingrese el nro de ID del luchador a buscar: ";
+    	cin >> laux.id;
+    	buscar(lista, luchador);
 	}
-
-
-	fclose(archive);
+	if(opcion == 4)
+	{
+		system("cls");
+    	guardarDatos(lista);
 	}
-	cout<<"6)Salir"<<endl;
-	cin>>opcion;
-	}while(opcion!=6);
-
+	if(opcion == 5)
+	{
+		system("cls");
+    	cargarGimnasio(lista);
+	}
+	
+    }while(opcion!=6);
+    	
+	return 0;
 }
