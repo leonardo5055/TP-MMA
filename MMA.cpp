@@ -86,7 +86,7 @@ Nodo* insertarOrdenado(Nodo*& lista,Luchador l)
 	p->info = l;
 	p->sgte = NULL;
 	
-	if(lista==NULL || (l.victorias-l.derrotas) < (lista->info.victorias-lista->info.derrotas))
+	if(lista==NULL || (l.victorias-l.derrotas) > (lista->info.victorias-lista->info.derrotas))
 	{
 		p->sgte=lista;
 		lista=p;
@@ -94,7 +94,7 @@ Nodo* insertarOrdenado(Nodo*& lista,Luchador l)
 	else
 	{ 
 		Nodo* q=lista;
-		while(q->sgte!=NULL &&(q->sgte->info.victorias-q->sgte->info.derrotas) < (l.victorias-l.derrotas))	
+		while(q->sgte!=NULL &&(q->sgte->info.victorias-q->sgte->info.derrotas) > (l.victorias-l.derrotas))	
 	   {
 	   		q=q->sgte;
 	   }	
@@ -131,13 +131,42 @@ int main(){
 	Luchador m;
 	int opcion;
 	crearArchivo();
+	int i=0;
 	do
 	{
 	cout<<"1)Inscripción de Atleta"<<endl;
-	if(opcion==1){
+		if(opcion==1){
+			Luchador l;
+
+			l.id=++i;
+			cout << "Ingrese nombre: "<<endl;
+			cin>> l.nombre;
+
+			cout << "Ingrese apodo: "<<endl;
+			cin>>l.apodo;
+
+			cout << "Ingrese peso: "<<endl;
+			cin >> l.peso;
+
+			cout << "Ingrese cantidad de victorias: "<<endl;
+			cin >> l.victorias;
+
+			cout << "Ingrese cantidad de derrotas: "<<endl;
+			cin >> l.derrotas;
+			aux=insertarOrdenado(lista,l);
+		}
+	cout<<"2)Generar Main Card"<<endl;
+	if(opcion==2){
+		mostrar(lista);
+	}
+	cout<<"3)Actualizar Récord"<<endl;	
+	cout<<"4)Guardar Gimnasio"<<endl;
+	cout<<"5)Cargar Gimnasio"<<endl;
+
+		if(opcion==5){
 		 FILE *archive = fopen("Luchadores.dat", "rb");
-		int i=0;
-	while(fread(&m,sizeof(Luchador),1,archive)&&i!=7)
+		
+	while(fread(&m,sizeof(Luchador),1,archive))
 	{
 		Top_10[i].id=m.id;
 		strcpy(Top_10[i].nombre,m.nombre);
@@ -147,16 +176,11 @@ int main(){
 		Top_10[i].derrotas=m.derrotas;
 		aux = insertarOrdenado(lista,m);		
 		i++;
-		cout<<i;
 	}
-	mostrar(lista);
+
 
 	fclose(archive);
 	}
-	cout<<"2)Generar Main Card"<<endl;
-	cout<<"3)Actualizar Récord"<<endl;
-	cout<<"4)Guardar Gimnasio"<<endl;
-	cout<<"5)Cargar Gimnasio"<<endl;
 	cout<<"6)Salir"<<endl;
 	cin>>opcion;
 	}while(opcion!=6);
