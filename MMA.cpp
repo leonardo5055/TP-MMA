@@ -16,6 +16,7 @@ struct Luchador{
 struct nodo{
     Luchador info;
     nodo* sgte;
+   
 };
 
 //Prototipos de la funcion
@@ -27,7 +28,7 @@ nodo* buscar(nodo*, Luchador);
 nodo* insertarOrdenado(nodo*&, Luchador);
 nodo* insertarSinRepetir(nodo*&, Luchador);
 void guardarDatos(nodo* &);
-void cargarGimnasio(nodo* &);
+void cargarGimnasio(FILE*,nodo* &);
 int generarMainCard(nodo*, Luchador[]);
 
 int main(){
@@ -60,7 +61,7 @@ int main(){
 	if(opcion == 2)
     {
     	int x;
-    	int cant = generarMainCard(lista, top_5);
+    	int cant = generarMainCard(lista, top_10);
     	if (cant == 0)
 		{
 			cout << "No hay luchadores disponibles para mostrar";
@@ -70,12 +71,12 @@ int main(){
 			for(int i = 0; i < cant; i++)
 			{
                 cout << "LUCHADOR " << i+1 << endl;
-                cout << "ID: " << top_5[i].id << endl;
-                cout << "Nombre: " << top_5[i].nombre << endl;
-                cout << "Apodo: " << top_5[i].apodo << endl;
-                cout << "Peso: " << top_5[i].peso << endl;
-                cout << "Victorias: " << top_5[i].victorias << endl;
-                cout << "Derrotas: " << top_5[i].derrotas << endl << endl;
+                cout << "ID: " << top_10[i].id << endl;
+                cout << "Nombre: " << top_10[i].nombre << endl;
+                cout << "Apodo: " << top_10[i].apodo << endl;
+                cout << "Peso: " << top_10[i].peso << endl;
+                cout << "Victorias: " << top_10[i].victorias << endl;
+                cout << "Derrotas: " << top_10[i].derrotas << endl << endl;
 			}
             cout << "Presione una tecla para regresar al menu...";
 		}
@@ -94,7 +95,8 @@ int main(){
 	if(opcion == 5)
 	{
 		cout << "-----Datos Cargados del Gimnasio-----"<< endl;
-    	cargarGimnasio(lista);
+		   FILE *archivo = fopen("Luchadores.dat", "rb");
+    	cargarGimnasio(archivo,lista);
 	}
 
     }while(opcion!=6);
@@ -156,28 +158,28 @@ void actualizarRecord(nodo* lista)
     system("cls");
 }
 
-int generarMainCard(nodo* lista, Luchador top_5[])
+int generarMainCard(nodo* lista, Luchador top_10[])
 {
     nodo* aux = lista;
     int i = 0;
 
-    while(aux != NULL && i < 5)
+    while(aux != NULL && i < 10)
     {
-        top_5[i] = aux->info;
+        top_10[i] = aux->info;
         aux = aux->sgte;
         i++;
     }
     return i;
 }
 
-void cargarGimnasio(nodo* &lista)
+void cargarGimnasio(FILE *archivo,nodo* &lista)
 {
-    FILE *archivo = fopen("Luchadores.dat", "rb");
+ 
     Luchador l;
 
     while (fread(&l, sizeof(Luchador), 1, archivo))
     {
-        insertarOrdenado(lista, l);
+        insertarSinRepetir(lista, l);
     }
 
     fclose(archivo);
