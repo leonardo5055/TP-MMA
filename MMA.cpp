@@ -39,7 +39,7 @@ int main(){
     nodo* lista = NULL;
 
 	FILE *archivo;
-	
+	cargarGimnasio(archivo,lista);
 	int opcion;
 
     do
@@ -49,8 +49,7 @@ int main(){
     cout << "2)Generar Main Card" << endl;
     cout << "3)Actualizar Record" << endl;
     cout << "4)Guardar Gimnasio" << endl;
-    cout << "5)Cargar Gimnasio" << endl;
-    cout << "6)Salir" << endl;
+    cout << "5)Salir" << endl;
 
     cout << endl << "> ";
     cin>>opcion;    
@@ -94,24 +93,19 @@ int main(){
 	{
     	guardarDatos(archivo, lista);
 	}
-	if(opcion == 5)
-	{
-    	if(!cargarGimnasio(archivo,lista))
-    	{
-    		cout << "No existe un archivo para cargar los datos"<<endl;
-    		cout <<endl<< "Presione una tecla para regresar al menu...";
-			_getch();
-		}
-		else
-		{
-			cout << "-----Datos Cargados del Gimnasio-----"<< endl;
-			cout <<endl<< "Presione una tecla para regresar al menu...";
-			_getch();
-		}
-    	
-	}
 
-    }while(opcion!=6);
+    }while(opcion!=5);
+    nodo* aux = lista;
+    int i = 0;
+
+    while(aux != NULL && i < 10)
+    {
+        Luchador l = aux->info;
+        aux = aux->sgte;
+        i++;
+        cout << l.id<<endl;
+    }
+    return i;
 
 	return 0;
 }
@@ -133,8 +127,9 @@ void inscripcionAtleta(nodo* &lista, Luchador luchador)
 
     cout << "Ingrese cantidad de derrotas: ";
     cin >> luchador.derrotas;
-
-	luchador.id = ID + 1;
+	
+	ID++;
+	luchador.id = ID;
     insertarSinRepetir(lista, luchador);
     
     cout <<endl<< "-----Luchador insertado correctamente-----";
