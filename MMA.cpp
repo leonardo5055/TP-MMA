@@ -16,32 +16,35 @@ struct Luchador{
 struct nodo{
     Luchador info;
     nodo* sgte;
-   
 };
 
+int ID = 0;
+
 //Prototipos de la funcion
-void actualizarRecord(nodo*);
+void actualizarRecord(nodo*&);
 void inscripcionAtleta(nodo*&, Luchador);
 Luchador pop(nodo* &);
 void push(nodo*&,Luchador);
 nodo* buscar(nodo*, Luchador);
 nodo* insertarOrdenado(nodo*&, Luchador);
 nodo* insertarSinRepetir(nodo*&, Luchador);
-void guardarDatos(nodo* &);
-void cargarGimnasio(FILE*,nodo* &);
+void guardarDatos(FILE*, nodo* &);
+bool cargarGimnasio(FILE*, nodo* &);
 int generarMainCard(nodo*, Luchador[]);
 
 int main(){
 	Luchador luchador;
     Luchador top_10[10];
-    Luchador top_5[5];
-
+	
     nodo* lista = NULL;
 
+	FILE *archivo;
+	
 	int opcion;
 
     do
     {
+    system("cls");
     cout << "1)Inscripcion de Atleta" << endl;
     cout << "2)Generar Main Card" << endl;
     cout << "3)Actualizar Record" << endl;
@@ -50,17 +53,16 @@ int main(){
     cout << "6)Salir" << endl;
 
     cout << endl << "> ";
-    cin>>opcion;
-
-    system("cls");
+    cin>>opcion;    
 
     if(opcion==1)
 	{
+		system("cls");
 		inscripcionAtleta(lista,luchador);
 	}
 	if(opcion == 2)
     {
-    	int x;
+    	system("cls");
     	int cant = generarMainCard(lista, top_10);
     	if (cant == 0)
 		{
@@ -82,21 +84,31 @@ int main(){
 		}
 
         _getch();
-        system("cls");
 	}
     if(opcion == 3)
 	{
+		system("cls");
     	actualizarRecord(lista);
 	}
 	if(opcion == 4)
 	{
-    	guardarDatos(lista);
+    	guardarDatos(archivo, lista);
 	}
 	if(opcion == 5)
 	{
-		cout << "-----Datos Cargados del Gimnasio-----"<< endl;
-		   FILE *archivo = fopen("Luchadores.dat", "rb");
-    	cargarGimnasio(archivo,lista);
+    	if(!cargarGimnasio(archivo,lista))
+    	{
+    		cout << "No existe un archivo para cargar los datos"<<endl;
+    		cout <<endl<< "Presione una tecla para regresar al menu...";
+			_getch();
+		}
+		else
+		{
+			cout << "-----Datos Cargados del Gimnasio-----"<< endl;
+			cout <<endl<< "Presione una tecla para regresar al menu...";
+			_getch();
+		}
+    	
 	}
 
     }while(opcion!=6);
@@ -107,10 +119,7 @@ int main(){
 //funciones
 void inscripcionAtleta(nodo* &lista, Luchador luchador)
 {
-    cout << "Ingrese ID: ";
-    cin >> luchador.id;
-
-    cout << "Ingrese nombre: ";
+	cout << "Ingrese nombre: ";
     cin >> luchador.nombre;
 
     cout << "Ingrese apodo: ";
@@ -125,32 +134,64 @@ void inscripcionAtleta(nodo* &lista, Luchador luchador)
     cout << "Ingrese cantidad de derrotas: ";
     cin >> luchador.derrotas;
 
+	luchador.id = ID + 1;
     insertarSinRepetir(lista, luchador);
-    system("cls");
-    cout << "-----Luchador insertado correctamente-----";
+    
+    cout <<endl<< "-----Luchador insertado correctamente-----";
     _getch();
     system("cls");
 }
 
-void actualizarRecord(nodo* lista)
+void extraerNodo(nodo*& lista, int id) {
+    nodo* ant = NULL;
+    nodo* aux = lista;
+
+    while (aux != NULL && aux->info.id != id) {
+        ant = aux;
+        aux = aux->sgte;
+    }
+
+    if (aux != NULL) {
+        if (ant == NULL) // si es el 1ro
+        {
+        	lista = aux->sgte;
+		}
+		else // si esta en medio o ultimo
+		{
+			ant->sgte = aux->sgte;  
+			//para medio el puntero apunta al siguiente
+			//para ultimo tambien pero el siguiente seria null
+		} 
+        
+        delete aux;
+    }
+}
+
+void actualizarRecord(nodo* &lista)
 {
     Luchador laux;
     cout << "Ingrese el nro de ID del luchador a buscar: ";
     cin >> laux.id;
     nodo *q;
     q = buscar(lista, laux);
+    
     if(q==NULL){
         cout << "No se encontro el ID del luchador.";
     }else{
-        cout << "ID: " << q->info.id << endl <<
-        "Nombre:" << q->info.nombre << endl <<
-        "Apodo: " << q->info.apodo << endl <<
-        "Victorias: " << q->info.victorias << endl <<
-        "Derrotas: " << q->info.derrotas << endl;
+    	laux = q->info;
+    	extraerNodo(lista, laux.id);
+        cout << "ID: " << laux.id << endl <<
+        "Nombre:" << laux.nombre << endl <<
+        "Apodo: " << laux.apodo << endl <<
+        "Victorias: " << laux.victorias << endl <<
+        "Derrotas: " << laux.derrotas << endl;
         cout << "Ingrese las victorias del luchador: ";
-        cin >> q->info.victorias;
+        cin >> laux.victorias;
         cout << "Ingrese las Derrotas del luchador: ";
-        cin >> q->info.derrotas;
+        cin >> laux.derrotas;
+        
+        insertarOrdenado(lista,laux);
+        
         system("cls");
         cout << "Se modifico las victorias/derrotas del luchador exitosamente";
     }
@@ -172,22 +213,30 @@ int generarMainCard(nodo* lista, Luchador top_10[])
     return i;
 }
 
-void cargarGimnasio(FILE *archivo,nodo* &lista)
+bool cargarGimnasio(FILE *archivo, nodo* &lista)
 {
- 
+    archivo = fopen("Luchadores.dat", "rb");
+
+    if (archivo == NULL)
+    {
+        return false;
+    }
+
     Luchador l;
 
-    while (fread(&l, sizeof(Luchador), 1, archivo))
+    while (fread(&l, sizeof(Luchador), 1, archivo) == 1)
     {
+        ID++;
         insertarSinRepetir(lista, l);
     }
 
     fclose(archivo);
+    return true;
 }
 
-void guardarDatos(nodo* &lista)
+void guardarDatos(FILE *archivo, nodo* &lista)
 {
-	FILE* archivo = fopen("Luchadores.dat","wb");
+	archivo = fopen("Luchadores.dat","wb");
 	nodo* aux = lista;
 	while(aux!=NULL)
 	{
@@ -217,8 +266,7 @@ nodo* insertarOrdenado(nodo*& lista, Luchador x)
 
     int dif = x.victorias - x.derrotas;
 
-    if(lista == NULL ||
-       dif > (lista->info.victorias - lista->info.derrotas))
+    if(lista == NULL || dif > (lista->info.victorias - lista->info.derrotas))
     {
         p->sgte = lista;
         lista = p;
@@ -226,8 +274,7 @@ nodo* insertarOrdenado(nodo*& lista, Luchador x)
     else
     {
         nodo* q = lista;
-        while(q->sgte != NULL &&
-              (q->sgte->info.victorias - q->sgte->info.derrotas) > dif)
+        while(q->sgte != NULL && (q->sgte->info.victorias - q->sgte->info.derrotas) > dif)
         {
             q = q->sgte;
         }
