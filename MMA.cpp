@@ -95,17 +95,6 @@ int main(){
 	}
 
     }while(opcion!=5);
-    nodo* aux = lista;
-    int i = 0;
-
-    while(aux != NULL && i < 10)
-    {
-        Luchador l = aux->info;
-        aux = aux->sgte;
-        i++;
-        cout << l.id<<endl;
-    }
-    return i;
 
 	return 0;
 }
@@ -187,8 +176,7 @@ void actualizarRecord(nodo* &lista)
         
         insertarOrdenado(lista,laux);
         
-        system("cls");
-        cout << "Se modifico las victorias/derrotas del luchador exitosamente";
+        cout << endl <<"Se modifico las victorias/derrotas del luchador exitosamente";
     }
     _getch();
     system("cls");
